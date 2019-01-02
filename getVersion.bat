@@ -1,0 +1,1 @@
+java -cp ./aofei_nfc.jar;../android_lib/android.jar com.aofei.nfc.TagUtil -v

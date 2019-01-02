@@ -1,0 +1,682 @@
+package com.xcore.ultralightwr;
+
+import java.io.IOException;
+
+import android.content.Intent;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.MifareUltralight;
+import android.nfc.tech.NfcA;
+import android.util.Log;
+import android.view.Gravity;
+import android.widget.Toast;
+
+import com.xcore.ultralightwr.*;
+import com.xcore.util.ThreeDES;
+
+public class TagUtil {
+
+	private static final int TAGUTIL_TYPE_ULTRALIGHT = 1;
+	private static final int TAGUTIL_TYPE_CLASSIC = 2;
+	private static final int TAGUTIL_NfcA = 3;
+	//	private static android.nfc.Tag tag;	
+	
+	private static String uid;
+
+	private int tagType;
+	
+	private byte[] secretKeyDefault;
+	private byte[] ivDefault = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };// 默认向量
+	private byte[] random = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };// 随机数
+	private boolean authorised;
+	
+	public TagUtil(String u,int type)
+	{
+		uid=u;
+		tagType = type;
+	}
+	
+//	public TagUtil(android.nfc.Tag tag)
+//	{
+//		this.tag = tag;
+//	}
+	
+//	public static  TagUtil SelectTag(Intent intent)
+//	{
+//		tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+//		com.aofei.nfc.Tag detectedTag  = new  com.aofei.nfc.Tag(tag);
+//		return detectedTag;
+//	}
+	
+	/**
+	 * get a tagUtil Object, return null if tag uid or tag type can't be found
+	 * @param intent
+	 * @return
+	 * @throws Exception
+	 */
+	public static TagUtil selectTag(Intent intent) throws Exception
+	{
+		String action = intent.getAction();
+		int type=0;
+		// 得到是否检测到ACTION_TECH_DISCOVERED触发
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) || NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			// 取出封装在intent中的TAG
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			String[] tagTypes = tagFromIntent.getTechList();// 支持的类型集合
+			String tagType = null;
+			if (tagTypes != null && tagTypes.length > 0) {
+				tagType = tagFromIntent.getTechList()[0];
+			}
+			if ("android.nfc.tech.MifareUltralight".equals(tagType)) {
+				getTagUID_MifareUltralight(tagFromIntent);
+				type=TAGUTIL_TYPE_ULTRALIGHT;
+			} else if ("android.nfc.tech.MifareClassic".equals(tagType)) {
+				// getMifareClassicMes(tagFromIntent);
+				type=TAGUTIL_TYPE_CLASSIC;
+			} else if ("android.nfc.tech.NfcA".equals(tagType)) {
+				getTagUID_NfcA(tagFromIntent);
+				type=TAGUTIL_NfcA;
+			}
+			
+			if(uid!=null && uid.length()>0 && type>0)
+			{
+				TagUtil tagUtil = new TagUtil(uid,type);
+				return tagUtil;
+			}else
+				return null;
+		}else
+		{
+			throw new Exception("unsupported action "+action +" only support ACTION_TECH_DISCOVERED or ACTION_TAG_DISCOVERED");
+		}
+	}
+	
+	
+	public byte[] readTagOnePage(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return readTagOnePage_NfcA( intent, addr);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return readTagOnePage_MifareUltraLight( intent, addr);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return readTagOnePage_MifareClassic( intent, addr);
+		else 
+			return null;
+	}
+	
+	private byte[] readTagOnePage_MifareUltraLight(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	private byte[] readTagOnePage_MifareClassic(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	/**
+	 * read one page(4 bytes) from tag,
+	 * @param intent
+	 * @param addr:  read address 
+	 * @return return 4 bytes array, or return null if read failed
+	 * @throws AuthenticationException
+	 * @throws Exception
+	 */
+	private byte[] readTagOnePage_NfcA(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		String action = intent.getAction();
+		byte[] result = null;
+		// 得到是否检测到ACTION_TECH_DISCOVERED触发
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) ||NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			// 取出封装在intent中的TAG
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			//MifareUltralight mfc = MifareUltralight.get(tagFromIntent);
+			NfcA mfc = NfcA.get(tagFromIntent);
+			try {
+				if(authorised){
+					mfc.connect();
+					accreditation(mfc,secretKeyDefault);//认证
+					// 读
+					byte[] data0 = new byte[2];
+					data0[0] = 0x30;
+					data0[1] = addr;
+					byte[] data1 = mfc.transceive(data0);// 每次读出来的数据为4page的数据
+					result = new byte[4];
+					System.arraycopy(data1, 0, result, 0, 4);// 去4page中的第1page数据
+				}else{
+					throw new AuthenticationException("please authenticate first!");
+				}				
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	public byte[] readTagFourPage(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return readTagFourPage_NfcA( intent, addr);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return readTagFourPage_MifareUltraLight( intent, addr);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return readTagFourPage_MifareClassic( intent, addr);
+		else 
+			return null;
+	}
+	
+	private byte[] readTagFourPage_MifareUltraLight(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	private byte[] readTagFourPage_MifareClassic(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	/**
+	 * read one page(4 bytes) from tag,
+	 * @param intent
+	 * @param addr:  read address 
+	 * @return return 16 bytes array, or return null if read failed
+	 * @throws AuthenticationException
+	 * @throws Exception
+	 */
+	private byte[] readTagFourPage_NfcA(Intent intent,byte addr) throws AuthenticationException,Exception
+	{
+		String action = intent.getAction();
+		byte[] result = null;
+		// 得到是否检测到ACTION_TECH_DISCOVERED触发
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) ||NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			// 取出封装在intent中的TAG
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			//MifareUltralight mfc = MifareUltralight.get(tagFromIntent);
+			NfcA mfc = NfcA.get(tagFromIntent);
+			try {
+				if(authorised){
+					mfc.connect();
+					accreditation(mfc,secretKeyDefault);//认证
+					byte[] data0 = new byte[2];
+					data0[0] = 0x30;
+					data0[1] = addr;
+					result = mfc.transceive(data0);// 每次读出来的数据为4page的数据
+				}else{
+					throw new AuthenticationException("please authenticate first!");
+				}				
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	public boolean writeTag(Intent intent, byte addr, byte[] conents) throws AuthenticationException, Exception
+	{
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return writeTag_NfcA( intent, addr,conents);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return writeTag_MifareUltraLight( intent, addr,conents);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return writeTag_MifareClassic( intent, addr,conents);
+		else 
+			return false;
+	}
+	
+	public boolean writeTag_MifareUltraLight(Intent intent, byte addr, byte[] conents) throws AuthenticationException, Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	
+	public boolean writeTag_MifareClassic(Intent intent, byte addr, byte[] conents) throws AuthenticationException, Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	public boolean writeTag_NfcA(Intent intent, byte addr, byte[] conents) throws AuthenticationException, Exception
+	{
+		boolean result = false;
+		String action = intent.getAction();
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) || NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			//MifareUltralight mfc = MifareUltralight.get(tagFromIntent);
+			NfcA mfc = NfcA.get(tagFromIntent);
+			
+			try {
+				if(authorised){
+					if(conents != null && conents.length== 4){//判断输入的数据
+						mfc.connect();
+						accreditation(mfc,secretKeyDefault);//认证
+						byte[] data2 = new byte[6];
+						data2[0] = (byte) 0xA2;
+						data2[1] = addr;
+						data2[2] = conents[0];
+						data2[3] = conents[1];
+						data2[4] = conents[2];
+						data2[5] = conents[3];						
+						byte[] data3 = mfc.transceive(data2);
+						result=true;
+					}else{
+						throw new AuthenticationException("contnets must be four bytes");
+					}
+				}
+				else
+				{
+					throw new AuthenticationException("please authenticate first!");
+				}			
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	public boolean Authentication(Intent intent, String key) throws AuthenticationException, Exception
+	{
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return Authentication_NfcA( intent, key);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return Authentication_MifareUltraLight( intent, key);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return Authentication_MifareClassic( intent, key);
+		else 
+			return false;
+	}
+	
+	private boolean Authentication_MifareUltraLight(Intent intent, String key) throws AuthenticationException, Exception
+	{
+		throw new Exception("unimplemented");
+	}
+	
+	private boolean Authentication_MifareClassic(Intent intent, String key) throws AuthenticationException, Exception
+	{
+		throw new Exception("unimplemented");
+	}	
+	
+	/**
+	 * 
+	 * @param intent
+	 * @param key 32个字符长的秘钥
+	 * @return
+	 * @throws AuthenticationException
+	 */
+	private boolean Authentication_NfcA(Intent intent, String key) throws AuthenticationException
+	{
+		boolean result = false;
+		String action = intent.getAction();
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) || NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			//MifareUltralight mfc = MifareUltralight.get(tagFromIntent);
+			NfcA mfc = NfcA.get(tagFromIntent);
+			try {
+				Log.e("aaa",key);
+				if(key != null && key.length() == 32){//判断输入的数据
+					byte[] data = new byte[24];
+					byte[] data2 = hexStringToBytes(key);	
+					System.arraycopy(data2, 0, data, 0, 16);
+					System.arraycopy(data2, 0, data, 16, 8);					
+					mfc.connect();
+					accreditation(mfc,data);//认证
+					result = true;
+					authorised=true;
+					secretKeyDefault = data;
+				}else{
+					throw new AuthenticationException("key must be 32 hex chars");
+				}	
+			} catch (Exception e) {
+				throw new AuthenticationException("authentication failed",e);
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}else
+		{
+			throw new AuthenticationException(action+ " is not support"+ ", action must be on of ACTION_TECH_DISCOVERED or ACTION_TAG_DISCOVERED");
+		}
+		return result;
+	}
+	
+	/**
+	 * read all pages as a byte array. (4 bytes one page)
+	 * @param intent
+	 * @return
+	 * @throws Exception
+	 */
+	public byte[] readAllPages(Intent intent) throws Exception{
+		
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return readAllPages_NfcA( intent);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return readAllPages_MifareUltraLight( intent);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return readAllPages_MifareClassic( intent);
+		else 
+			return null;
+	}
+	
+	private byte[] readAllPages_MifareUltraLight(Intent intent) throws Exception{
+		throw new Exception("unimplemented");
+	}
+	
+	private byte[] readAllPages_MifareClassic(Intent intent) throws Exception{
+		throw new Exception("unimplemented");
+	}
+	
+	// 获取MifareUltralight标签的全部信息
+		private byte[] readAllPages_NfcA(Intent intent) throws Exception{
+			Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			NfcA mfc = NfcA.get(tag);
+			int blockNum =0x2B;
+			byte[] result= new byte[blockNum];
+			try {
+				if(authorised){
+					// 读数据
+					for (int i = 0x00; i <= blockNum; i++) {
+						byte[] data0 = new byte[2];
+						data0[0] = 0x30;
+						data0[1] = (byte) i;
+
+						byte[] data1 = mfc.transceive(data0);// 每次读出来的数据为4page的数据
+						byte[] data = new byte[4];
+						System.arraycopy(data1, 0, result, 4*i, 4);// 去4page中的第1page数据
+//						System.out.println("duchulai" + i + ":"
+//								+ bytesToHexString(data1));
+					}
+					return result;
+				}else{
+					throw new AuthenticationException("please authenticate first!");
+				}		
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	/**
+	 * change a new key for the tag
+	 * @param intent
+	 * @param newKey
+	 * @return
+	 * @throws AuthenticationException
+	 * @throws Exception
+	 */
+	public boolean WriteNewKeys(Intent intent,String newKey) throws AuthenticationException,Exception
+	{
+		if(newKey != null && newKey.length() == 32){
+		if(tagType==TagUtil.TAGUTIL_NfcA)
+			return WriteNewKeys_NfcA( intent,newKey);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_ULTRALIGHT)
+			return WriteNewKeys_MifareUltraLight( intent,newKey);
+		else if (tagType==TagUtil.TAGUTIL_TYPE_CLASSIC)
+			return WriteNewKeys_MifareClassic( intent,newKey);
+		else 
+			return false;
+		}else
+			throw new Exception("key must be 32 hex chars");
+	}
+	
+	private boolean WriteNewKeys_MifareUltraLight(Intent intent,String newKey) throws Exception{
+		throw new Exception("unimplemented");
+	}
+	
+	private boolean WriteNewKeys_MifareClassic(Intent intent,String newKey) throws Exception{
+		throw new Exception("unimplemented");
+	}
+	
+	// 写入密钥
+	private boolean WriteNewKeys_NfcA(Intent intent,String newKey)  throws Exception{
+		boolean result = false;
+		String action = intent.getAction();
+		if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(action) || NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)) {
+			Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+			//MifareUltralight mfc = MifareUltralight.get(tagFromIntent);
+			NfcA mfc = NfcA.get(tagFromIntent);
+			try {
+				if(authorised){
+					String dataString = newKey;
+					//判断输入的数据	
+						
+						byte[] dataX = hexStringToBytes(dataString);
+						byte[] dataY = new byte[16];
+						for(int i=0;i<16;i++){
+							dataY[i] = dataX[15-i];
+							System.out.println("mi"+dataY[i]);
+						}									
+						byte[] data1 = new byte[6];
+						data1[0] = (byte) 0xA2;
+						data1[1] = (byte) 0x2C;
+						System.arraycopy(dataY, 8, data1, 0, 4);
+						
+						byte[] data2 = new byte[6];
+						data2[0] = (byte) 0xA2;
+						data2[1] = (byte) 0x2D;
+						System.arraycopy(dataY, 12, data2, 0, 4);
+						
+						byte[] data3 = new byte[6];
+						data3[0] = (byte) 0xA2;
+						data3[1] = (byte) 0x2E;
+						System.arraycopy(dataY, 0, data3, 0, 4);
+						
+						byte[] data4 = new byte[6];
+						data4[0] = (byte) 0xA2;
+						data4[1] = (byte) 0x2F;
+						System.arraycopy(dataY, 4, data4, 0, 4);
+						
+						mfc.connect();
+						accreditation(mfc,secretKeyDefault);//认证	
+						
+						mfc.transceive(data1);
+						mfc.transceive(data2);
+						mfc.transceive(data3);
+						mfc.transceive(data4);						
+						result = true;
+			
+				}else{
+					throw new AuthenticationException("please authenticate first!");
+				}			
+			}catch (NumberFormatException e) {
+				throw new Exception("new key: "+newKey+" is not correct." +" key must be 32 hex chars");
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				try {
+					mfc.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	public boolean SetAccess(byte addr, int access) throws AuthenticationException
+	{
+		return false;
+	}
+	
+	public boolean LockBlock(byte addr1 ,byte addr2) throws AuthenticationException
+	{
+		return false;
+	}
+	public boolean LockBlockAll() throws AuthenticationException
+	{
+		return false;
+	}
+	
+	public boolean LockBits() throws AuthenticationException
+	{
+		return false;
+	}
+	
+	public int getTagType() throws AuthenticationException
+	{
+		return tagType;
+	}
+	
+	private void accreditation(NfcA mfc,byte[] secretKeys) throws Exception {
+		byte[] iv = ivDefault;
+		
+		byte[] command0 = new byte[2];// 发送认证指令的参数
+		byte[] command1 = null;// 发送认证后，卡片返回的密文
+		byte[] command2 = null;// 由command1去掉数组中的第1个数据,取出有效数组
+		byte[] command3 = null;// 第一次解密出的数据
+		byte[] command4 = null;// 阅读器第一次加密后的数据
+		byte[] command5 = null;// 循环左移得到的数据
+		byte[] command6 = null;// 阅读器第二次加密后的数据RNDB''
+		byte[] command7 = null;//
+		byte[] command8 = null;//
+		byte[] command9 = null;//
+		byte[] command10 = null;//
+		byte[] command11 = null;//
+
+		command0[0] = (byte) 0x1A; // 命令位
+		command0[1] = (byte) 0x00; // 标志位
+		command1 = mfc.transceive(command0);
+		command2 = new byte[8];
+		System.arraycopy(command1, 1, command2, 0, 8);
+		command3 = ThreeDES.decode(command2, iv, secretKeys);
+		iv = command2;
+		command4 = ThreeDES.encode(random, iv, secretKeys);
+		iv = command4;
+		command5 = new byte[8];
+		System.arraycopy(command3, 1, command5, 0, 7);
+		command5[7] = command3[0];
+		command6 = ThreeDES.encode(command5, iv, secretKeys);
+		command7 = new byte[16];
+		System.arraycopy(command4, 0, command7, 0, 8);
+		System.arraycopy(command6, 0, command7, 8, 8);
+		command8 = new byte[17];
+		command8[0] = (byte) 0xAF;
+		System.arraycopy(command7, 0, command8, 1, 16);
+		command9 = mfc.transceive(command8);
+		command10 = new byte[8];
+		System.arraycopy(command9, 1, command10, 0, 8);
+		iv = command6;
+		command11 = ThreeDES.decode(command10, iv, secretKeys);
+	}
+	
+	/**
+	 * 16进制字符串转化为字节数组
+	 */
+	private byte[] hexStringToBytes(String hexString) {  
+	    if (hexString == null || hexString.equals("")) {  
+	        return null;  
+	    }  
+	    hexString = hexString.toUpperCase();  
+	    int length = hexString.length() / 2;  
+	    char[] hexChars = hexString.toCharArray();  
+	    byte[] d = new byte[length];  
+	    for (int i = 0; i < length; i++) {  
+	        int pos = i * 2;  
+	        d[i] = (byte) (charToByte(hexChars[pos]) << 4 | charToByte(hexChars[pos + 1]));  
+	    }  
+	    return d;  
+	}  
+	
+	private byte charToByte(char c) {  
+		int i = "0123456789ABCDEF".indexOf(c);
+		if(i == -1){
+			throw new NumberFormatException();
+		}else{
+			return (byte)i;  
+		}   
+	}
+	
+	/**
+	 * 字节数组转化为16进制字符串
+	 */
+	private static String bytesToHexString(byte[] src) {
+		StringBuilder stringBuilder = new StringBuilder();
+		if (src == null || src.length <= 0) {
+			return null;
+		}
+		for (int i = 0; i < src.length; i++) {
+			int v = src[i] & 0xFF;
+			String hv = Integer.toHexString(v);
+			if (hv.length() < 2) {
+				stringBuilder.append(0);
+			}
+			stringBuilder.append(hv);
+		}
+		return stringBuilder.toString();
+	}
+	
+	private static void getTagUID_MifareUltralight(Tag tag) throws Exception
+	{
+		MifareUltralight mfc = MifareUltralight.get(tag);
+		try {
+			String metaInfo = "";
+			mfc.connect();
+			byte[] datas = new byte[2];
+			datas[0] = 0x30;
+			datas[1] = 0x00;
+			byte[] datar = mfc.transceive(datas);// 每次读出来的数据为4page的数据
+			byte[] datau = new byte[7];//uid号
+			System.arraycopy(datar, 0, datau, 0, 3);// 去4page中的第1page数据
+			System.arraycopy(datar, 4, datau, 3, 4);// 去4page中的第1page数据
+			uid=bytesToHexString(datau);
+		}
+		catch(Exception e)
+		{
+			throw e;
+		}
+	}
+	
+	private static void getTagUID_NfcA(Tag tag) throws Exception
+	{
+		NfcA mfc = NfcA.get(tag);
+		try {
+			String metaInfo = "";
+			mfc.connect();
+			byte[] datas = new byte[2];
+			datas[0] = 0x30;
+			datas[1] = 0x00;
+			byte[] datar = mfc.transceive(datas);// 每次读出来的数据为4page的数据
+			byte[] datau = new byte[7];//uid号
+			System.arraycopy(datar, 0, datau, 0, 3);// 去4page中的第1page数据
+			System.arraycopy(datar, 4, datau, 3, 4);// 去4page中的第1page数据
+			uid=bytesToHexString(datau);
+		}
+		catch(Exception e)
+		{
+			throw e;
+		}
+	}
+	
+
+	public static String getUid() {
+		return uid;
+	}
+
+
+
+	public static void setUid(String uid) {
+		TagUtil.uid = uid;
+	}
+}
