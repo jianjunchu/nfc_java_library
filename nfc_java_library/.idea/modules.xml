@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/aofei_nfc/aofei_nfc.iml" filepath="$PROJECT_DIR$/aofei_nfc/aofei_nfc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nfc_java_library1.iml" filepath="$PROJECT_DIR$/nfc_java_library1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src_example/src_example.iml" filepath="$PROJECT_DIR$/src_example/src_example.iml" />
+    </modules>
+  </component>
+</project>
