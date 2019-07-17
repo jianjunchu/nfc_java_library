@@ -23,5 +23,5 @@
 # Build jar
 gradle makeJar
 
-# clear jar
+# Clear jar
 gradle clearJar
