@@ -20,3 +20,8 @@
           http://www.nfc315.com
  
  
+# Build jar
+gradle makeJar
+
+# clear jar
+gradle clearJar
