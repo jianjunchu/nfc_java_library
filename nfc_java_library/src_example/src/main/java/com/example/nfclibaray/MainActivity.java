@@ -48,8 +48,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
-        TagUtil.selectTag()
-        tagUtil.authentication()
+
 
         setContentView(R.layout.main);
         findViewById(R.id.clear_screen).setOnClickListener(mScreenClear);
