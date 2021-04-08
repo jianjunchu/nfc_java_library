@@ -25,7 +25,7 @@
         android:theme="@style/AppTheme" >
 
         <activity
-            android:name="com.example.nfclibaray.MainActivity"
+            android:name="com.aofei.webpagetag.MainActivity"
             android:label="@string/app_name"
             tools:ignore="WrongManifestParent">
             <intent-filter>

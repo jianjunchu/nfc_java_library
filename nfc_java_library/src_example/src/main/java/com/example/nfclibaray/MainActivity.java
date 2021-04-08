@@ -48,8 +48,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
-
-
         setContentView(R.layout.main);
         findViewById(R.id.clear_screen).setOnClickListener(mScreenClear);
         findViewById(R.id.write_tag).setOnClickListener(mTagWriter);
@@ -59,6 +57,8 @@ public class MainActivity extends Activity {
         mNote.setText(new Integer(counter).toString());
         pendingIntent = PendingIntent.getActivity(
                 this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+
+
     }
 
     @Override
@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
 //        try {
 //				tagUtil.authentication216(intent, pwd, false);
 //				byte[] contents = tagUtil.readAllPages(intent,false);
-//				
+//
 //			} catch (AuthenticationException e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
 //        	 }
 //        	 boolean case1Result = testReadPageWithoutAuthentication(intent);
 //        	 boolean case2Result = testWritePageWithoutAuthentication(intent);
-//        	 
+//
 //        	 testTag(tagUtil,intent);
 //        	 try {
 //        		 //tagUtil.enableCounter(intent, true, false);
@@ -112,14 +112,14 @@ public class MainActivity extends Activity {
 //            	    tagUtil.readAllPages(intent,false);
 //             		tagUtil.authentication(intent, "4A35B5D5454151522140515355405847",false); //认证
 //             } catch (Exception e) {
-//            	 mNote.setText("authentication failed");	
+//            	 mNote.setText("authentication failed");
 //            	 mNote.setText(e.getMessage());
 // 				e.printStackTrace();
 // 				return;
 // 			}
 
-//lock all pages            
-//             try {          
+//lock all pages
+//             try {
 // 					if(tagUtil.lockPageAll(intent, false))
 // 					{
 // 						counter++;
@@ -127,7 +127,7 @@ public class MainActivity extends Activity {
 // 					}
 // 					else
 // 					{
-// 						mNote.setText("lock failed");								
+// 						mNote.setText("lock failed");
 // 					}
 // 				}
 // 			 catch (Exception e) {
@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
 //         }
 
 //get CID and verifyCID
-//           try {  
+//           try {
 //        	   byte[] cid = tagUtil.getCID(intent, false);
 //				mNote.setText("CID="+TagUtil.bytesToHexString(cid));  //完成操作
 //				boolean result = tagUtil.verifyCID(intent, TagUtil.hexStringToBytes(tagUtil.getUid()), cid);
@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
 //			}
 //			 catch (Exception e) {
 //				e.printStackTrace();
-//       }       	 
+//       }
         }
     }
 
@@ -235,244 +235,193 @@ public class MainActivity extends Activity {
     }
 
     protected void onNewIntent(Intent intent) {
-        Tag detectedTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
-        //if(tagUtil == null)
+        TagUtil tagUtil=null;
+
+
+
+
+        //第一步 创建一个 TagUtil 对象 TagUtil tagUtil=null; if(tagUtil == null)
         try {
-            tagUtil = TagUtil.selectTag(intent,false);
-        }
-        catch (TagLostException ex1) {
-            if(ex1 != null)
-            {
-                mNote.setText("Tag lost or Unsupported NFC Chip\r\n" +ex1.getMessage());
-            }
-        }catch (Exception ex2) {
-            if(ex2 !=null )
-            {
-                mNote.setText("Error\r\n" +ex2.getMessage());
-            }
+            tagUtil = TagUtil.selectTag(intent,false); //选卡操作,其中false 参数说明是 否增加校验值，对少数手机需要设置为true。
+        }catch (Exception e) {
+            e.printStackTrace();
         }
 
-        if(writeModelFlag)
+        /*try{
+            //4A35B5D5454151522140515355405847
+            boolean s = tagUtil.authentication_internal(intent, "4A35B5D5454151522140515355474747",false);
+            if(s){
+                Log.e("kkk", "认证成功");
+            }else{
+                Log.e("kkk", "认证失败");
+            }
+        }catch (Exception ex)
         {
-            String content = mNote.getText().toString();
-            byte[] contentByte = TagUtil.hexStringToBytes(content);
-            try {
-                String s =  ((EditText) findViewById(R.id.input_text)).getText().toString();
-                byte page_no = new Integer(s).byteValue();
-                writeTag(intent,page_no, contentByte);
-            } catch (AuthenticationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                Log.e("xxx", e.getMessage());
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                Log.e("xxx", e.getMessage());
-            }
+            ex.printStackTrace();
         }
-        else
+
+        try{
+            boolean s  = tagUtil.setAccess216SC(intent, (byte)5, 1, false);
+            if(s){
+                Log.e("kkk", "设置读写认证成功");
+            }else{
+                Log.e("kkk", "设置读写认证失败");
+            }
+
+        }catch (Exception ex)
         {
+            ex.printStackTrace();
+        }
 
-            byte[] content=null;
-            try {
+        if(true){
+            return;
+        }*/
 
 
-//authenticaiton216 demo
-//			  	byte[] pwd = new byte[]{(byte)0XFF,(byte)0XFF,(byte)0XFF,(byte)0XFF};
-//			  	boolean result = false;
-//		        try {
-//		        	result = tagUtil.authentication216(intent, pwd, false);					
-//				}catch(Exception ex)
-//				{
-//					ex.printStackTrace();
-//				}
-//		        
-//				mNote.setText("result="+result);		
+        //第二步 使用 tagUtil 对象完成各种操作，如 try{
+        try{
+            byte[] bytes = tagUtil.readAllPages(intent,15,false);//读取出5页面的内容, 其中false 参数说明是否增加校验值，对少数手机需要设置为true。
 
-//read page content demo
-                byte[] contents =null;
+            Log.e("kkk",new String(bytes));
+            for (int i=0;i<bytes.length;i++) Log.e("kkk","byte "+i +" is "+bytes[i]);
 
-                String s =  ((EditText) findViewById(R.id.input_text)).getText().toString();
-                byte page_no ;
-                if(s==null||s.trim().length()==0)
-                    page_no=5;
-                else
-                    page_no = new Integer(s).byteValue();
-                //content = tagUtil.readOnePage(intent,page_no, false);
-                content = tagUtil.readAllPages(intent,228,false);
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
-                String uid = tagUtil.getUid();
-                if(uid!=null && content!=null)
-                    //mNote.setText("UID="+uid+"    Content="+TagUtil.bytesToHexString(content));
-                    mNote.setText("UID="+uid+"    Content="+new String(content));
 
-//				content = tagUtil.readAllPages(intent, false);
-//				mNote.setText(TagUtil.bytesToHexString(content));
-            } catch (AuthenticationException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
+
+        try{
+
+            byte[] bytes = "TestTest写入测试123".getBytes("UTF-8");
+
+            boolean s  = tagUtil.writeTag(intent,(byte)5,bytes,false);
+            if(s){
+                Log.e("kkk", "写入成功");
+            }else{
+                Log.e("kkk", "写入失败");
             }
 
-
-            //get CID and verifyCID
-//            boolean result=false;
-//            try {  
-//         	   byte[] cid = tagUtil.getCID(intent, false);
-// 				mNote.setText("CID="+TagUtil.bytesToHexString(cid));  //完成操作
-// 				result = tagUtil.verifyCID(intent, TagUtil.hexStringToBytes(tagUtil.getUid()), cid);
-// 				mNote.setText(" Check Result="+result);  //完成操作
-// 				}
-// 			 catch (Exception e) {
-// 				e.printStackTrace();
-// 				mNote.setText(" exception Check Result="+result);  //完成操作
-//        }       	 
-
-
-//            try {
-//       		 //tagUtil.enableCounter(intent, true, false);
-//            
-//            	
-////            try {
-////        			tagUtil.authentication216(intent, new byte[]{(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF}, false);
-////        		} catch (AuthenticationException e1) {
-////        			// TODO Auto-generated catch block
-////        			e1.printStackTrace();
-////        		} catch (Exception e1) {
-////        			// TODO Auto-generated catch block
-////        			e1.printStackTrace();
-////        		}
-////            	
-////            try {
-////        			tagUtil.setAccess216(intent, (byte)5, 1, false);
-////        		}
-////        		catch (Exception e) {
-////        			e.printStackTrace();
-////        	 }
-//            
-//            
-//             boolean case1Result = testReadPageWithoutAuthentication(intent);	 
-//             boolean case2Result = testWritePageWithoutAuthentication(intent);
-//             boolean case3Result = testWritePWD216(intent);
-//             
-//             if(!case1Result)
-//            	 Log.e("failed","case 1 failed");	
-//             
-//             if(!case2Result)
-//            	 Log.e("failed","case 2 failed");
-//             
-//             testTag(tagUtil,intent);
-//            	 
-//       		 int c =tagUtil.getCount(intent, false);
-//       		 mNote.setText("读取次数: \r\n" +c);
-//			}catch (Exception e) {
-//					e.printStackTrace();
-//			}
-
-// if  authentication needed            
-//            try {
-//            	
-//            		tagUtil.authentication(intent, "4A35B5D5454151522140515355405847",false);
-//            		Log.e("aaa","authentication success"); 
-//            } catch (Exception e) {
-//				//e.printStackTrace();
-//            		Log.e("aaa","authentication failed"); 
-//			}
-
-//for FJ8010 3des demo            
-//            boolean authenticationFlag = false;
-//            try {
-//            	tagUtil.authentication(intent, "4A35B5D5454151522140515355405847",false);
-//            	authenticationFlag = true;
-//            	Log.e("aaa","authentication success");
-//            	//tagUtil.readOnePage(intent,(byte)5,false);            	            	
-//            } catch (Exception e) {
-//            	e.printStackTrace();
-//            	Log.e("error","authentication failed");
-//            	mNote.setText(e.getMessage());  
-//            	e.printStackTrace();
-//			}
-//            if(authenticationFlag)
-//            {
-//	            try {            
-//	        		for(int i=4;i<15;i++){
-//	        			byte[] data = tagUtil.readOnePage(intent, (byte) i,false);
-//	        			mNote.setText(mNote.getText().toString()+"page "+i+": "+bytes2HexString(data)+"\n");
-//	        		} 
-//				}
-//			 catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				 mNote.setText(mNote.getText().toString()+"\n5: "+e.getMessage());
-//				 e.printStackTrace();
-//			 }
-//            }     
-
-//lock page demo
-//            try {
-//					if(tagUtil.lockPageAll(intent,false))
-//					{
-//						counter++;
-//						mNote.setText(new Integer(counter).toString());
-//					}
-//					else
-//					{
-//						mNote.setText("lock failed");								
-//					}
-//				}
-//			 catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//        }
-
-//get CID and verifyCID demo
-//            byte[] cid = null;
-//            try {
-//         	   cid = tagUtil.getCID(intent, false);
-// 				mNote.setText("CID="+TagUtil.bytesToHexString(cid));  //完成操作
-// 				boolean result = tagUtil.verifyCID(intent, TagUtil.hexStringToBytes(tagUtil.getUid()), cid);
-// 				mNote.setText(" Check Result="+result);  //完成操作
-// 				}
-// 			 catch (Exception e) {
-// 				e.printStackTrace();
-//        }
-//            
-//            try {
-//            	if(cid == null)
-//            	{
-//            		boolean result  = tagUtil.verifyCID(intent,TagUtil.hexStringToBytes(tagUtil.getUid()), cid);
-//            		mNote.setText(" Check Result="+result);
-//            	}else
-//            	{
-//            		mNote.setText("cid is null");
-//            	}
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-
-//两步验证方法
-//            byte[] secretKeys= {0x49, 0x45, 0x4D, 0x4B, 0x41, 0x45, 0x52, 0x42
-//                  , 0x21, 0x4E, 0x41, 0x43, 0x55, 0x4F, 0x59, 0x46
-//                  , 0x49, 0x45, 0x4D, 0x4B, 0x41, 0x45, 0x52, 0x42};    //24字节的密钥
-//            
-//            com.aofei.nfc.Verifier verifier = new com.aofei.nfc.Verifier();
-//            try {
-//				byte[] array1 = tagUtil.authStep1(intent,false);
-//				Log.i("aaa", "===array"+array1);
-//				byte[][] result1 = verifier.verifyStep1(array1, secretKeys);
-//				
-//				byte[] array2 = tagUtil.authStep2(intent,result1[0],false);
-//				 byte[] result2 = verifier.verifyStep2(result1[1],array2,secretKeys);
-//				 if(result2!=null)
-//				 {
-//					 String str =tagUtil.bytesToHexString(result2);
-//					 Log.i("aaa", str);
-//				 }
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
         }
+
+        try{
+            byte[] bytes = tagUtil.readAllPages(intent,15,false);//读取出5页面的内容, 其中false 参数说明是否增加校验值，对少数手机需要设置为true。
+
+            Log.e("kkk",new String(bytes));
+            for (int i=0;i<bytes.length;i++) Log.e("kkk","byte "+i +" is "+bytes[i]);
+
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+
+
+
+       /* try{
+            //4A35B5D5454151522140515355474747
+           boolean s =  tagUtil.writeNewKey216SC(intent,"4A35B5D5454151522140515355474747",false);
+            if(s){
+                Log.e("kkk", "设置新密码成功");
+            }else{
+                Log.e("kkk", "设置新密码失败");
+            }
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }*/
+
+
+
+
+        /*try{
+            boolean s  = tagUtil.setAccess216SC(intent, (byte)5, 0, false);
+            if(s){
+                Log.e("kkk", "设置读写认证成功");
+            }else{
+                Log.e("kkk", "设置读写认证失败");
+            }
+
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }*/
+
+        /*try{
+
+            byte[] bytes = "TestTest写入测试".getBytes("UTF-8");
+
+            boolean s  = tagUtil.writeTag(intent,(byte)5,bytes,false);
+            if(s){
+                Log.e("kkk", "写入成功");
+            }else{
+                Log.e("kkk", "写入失败");
+            }
+
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }*/
+
+
+        //第二步 使用 tagUtil 对象完成各种操作，如 try{
+        /*try{
+            byte[] bytes = tagUtil.readAllPages(intent,9,false);//读取出5页面的内容, 其中false 参数说明是否增加校验值，对少数手机需要设置为true。
+
+            Log.e("kkk",new String(bytes));
+            for (int i=0;i<bytes.length;i++) Log.e("kkk","byte "+i +" is "+bytes[i]);
+
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }*/
+
+
+
+        /*try{
+            //4A35B5D5454151522140515355405847
+            tagUtil.authentication_internal(intent, "4A35B5D5454151522140515355474747",false);
+            Log.e("kkk", "authentication success"); }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }*/
+
+        /*try{
+            //4A35B5D5454151522140515355474747
+            tagUtil.writeNewKey216SC(intent,"4A35B5D5454151522140515355405847",false);
+            Log.e("kkk", "writeNewKey216SC success"); }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }*/
+
+        /*try{
+            tagUtil.authentication(intent, "4A35B5D5454151522140515355405847",false);
+            Log.e("kkk", "old key authentication success"); }catch (Exception ex)
+        {
+            Log.e("kkk", "old key authentication failure");
+            ex.printStackTrace();
+        }
+
+        try{
+            tagUtil.authentication(intent, "4A35B5D5454151522140515355474747",false);
+            Log.e("kkk", "new  key authentication success"); }catch (Exception ex)
+        {
+            Log.e("kkk", "new  key authentication failure");
+            ex.printStackTrace();
+        }
+
+
+
+        try{
+            tagUtil.setAccess216SC(intent, (byte)5, 1, false);
+            Log.e("kkk", "设置读写认证"); }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        */
+
     }
 
     private void writeTag(Intent intent,byte page,byte[] content) throws AuthenticationException, Exception {

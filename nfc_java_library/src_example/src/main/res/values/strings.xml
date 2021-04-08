@@ -3,8 +3,35 @@
     <string name="hello">Hello World, StickyNotesActivity!</string>
     <string name="app_name">nfc测试support@nfcsolution.cn</string>
     <string name="clear_screen">清除屏幕</string>
-    <string name="write_tag">写模式</string>
-    <string name="read_tag">读模式</string>
+
     <string name="page_no">页号</string>
     <string name="default_note_text">Edit me!</string>
+
+    <string name="web_address">网页地址:</string>
+    <string name="secret_key">密钥验证:</string>
+    <string name="write_protection">写入保护:</string>
+    <string name="enable">启用</string>
+    <string name="disable">禁用</string>
+    <string name="invalid_web_address">请输入有效网址</string>
+    <string name="empty_secret_key">请输入密钥</string>
+    <string name="write_tag">写入标签</string>
+    <string name="read_tag">读出标签</string>
+    <string name="modify_secret_key">修改密钥</string>
+    <string name="writing_tag">正在写入标签...</string>
+    <string name="write_tag_success">写入标签成功</string>
+    <string name="write_tag_failure">写入标签失败</string>
+    <string name="reading_tag">正在读出标签...</string>
+    <string name="read_tag_success">读出标签成功</string>
+    <string name="read_tag_failure">读出标签失败</string>
+    <string name="old_secret_key">原密钥:</string>
+    <string name="new_secret_key">新密钥:</string>
+    <string name="comfirm_secret_key">确认新密钥:</string>
+    <string name="modifying_secret_key">正在修改密钥...</string>
+    <string name="modify_secret_key_success">修改密钥成功</string>
+    <string name="modify_secret_key_failure">修改密钥失败</string>
+    <string name="empty_old_secret_key">请输入原密钥</string>
+    <string name="empty_new_secret_key">请输入新密钥</string>
+    <string name="empty_comfirm_secret_key">请输入确认新密钥</string>
+    <string name="new_secret_key_too_long">新密钥长度不能大于16个字节</string>
+    <string name="new_secret_key_conflict">两次输入新密钥不一致</string>
 </resources>
