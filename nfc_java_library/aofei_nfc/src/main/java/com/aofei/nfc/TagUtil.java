@@ -16,12 +16,15 @@ import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.ui.ExitStatus;
 import jonelo.sugar.util.ExitException;
+
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.NfcA;
+import android.os.Build;
 import android.util.Log;
 
 
@@ -172,7 +175,7 @@ public class TagUtil {
 	 * 读取一个页面( 1个页面包含 4 个字节),
 	 * @param intent
 	 * @param addr:  要读取的页面地址
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return 返回 4 个字节的数组  ，如果读取失败返回 null ，如果需要认证才能读取，抛出异常。
 	 * @throws AuthenticationException
 	 * @throws Exception
@@ -410,7 +413,7 @@ public class TagUtil {
 	 * 读取4个页面（1个页面包含 4 个字节）
 	 * @param intent
 	 * @param addr:  要读取的4个页面的第一个页面的地址
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return 返回  16 个字节的数组。 如果读取失败返回 null ，如果需要认证才能读取，抛出异常。
 	 * @throws AuthenticationException
 	 * @throws Exception
@@ -747,9 +750,9 @@ public class TagUtil {
 	 * 认证
 	 * @param intent
 	 * @param key 秘钥 16 个字符（字母和数字）。
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return
-	 * @throws TagAuthenticationException
+	 * @throws AuthenticationException
 	 */
 	public boolean authentication(Intent intent, String key, boolean isCheckSum) throws AuthenticationException, Exception
 	{
@@ -761,9 +764,9 @@ public class TagUtil {
 	 * 认证
 	 * @param intent
 	 * @param key 秘钥 16 个字符（字母和数字）。
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return
-	 * @throws TagAuthenticationException
+	 * @throws AuthenticationException
 	 */
 	public boolean authentication(Intent intent, byte[] key, boolean isCheckSum) throws AuthenticationException, Exception
 	{
@@ -774,7 +777,7 @@ public class TagUtil {
 	 * 认证
 	 * @param intent
 	 * @param key 秘钥 16 个字节， 用   32  个 16 进制字符的字符串表示。
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return
 	 * @throws AuthenticationException
 	 */
@@ -846,7 +849,7 @@ public class TagUtil {
 	 * 从第 0 页开始，读取指定页数的数据，返回一个字节数组(1 页 4 个字节)
 	 * @param intent:
 	 * @param pageNums:  指定页数
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return
 	 * @throws Exception
 	 */
@@ -1486,7 +1489,7 @@ public class TagUtil {
 	 * @param intent
 	 * @param addr: 访问地址，
 	 * @param access: 如果设置为  0, 读写操作都需要授权. 如果设置为1 ,只有写操作需要授权。
-	 * @param isCheckSUM: 是否增加校验位
+	 * @param isCheckSum: 是否增加校验位
 	 * @return
 	 * @throws Exception
 	 */
@@ -1706,7 +1709,7 @@ public class TagUtil {
 	 * 锁定为在第 40 页， 可以锁定的范围是 16 到 47 页面。
 	 * lock in page 40, lock address between 16 and 47
 	 * @param intent
-	 * @param b
+	 * @param startAddr
 	 * @param endAddr
 	 * @param isCheckSum 是否在命令后自动增加校验位。
 	 */
@@ -1786,7 +1789,7 @@ public class TagUtil {
 	/**
 	 * 锁定位在第 2 页面， 可以锁定的地址范围是 3 到 15
 	 * lock in page 2, lock address between 3 and 15
-	 * @param startAddr1
+	 * @param startAddr
 	 * @param endAddr
 	 * @param isCheckSum 是否在命令后自动增加校验位。
 	 */
@@ -1915,6 +1918,7 @@ public class TagUtil {
 		return tagType;
 	}
 
+	/**
 	private void accreditation(NfcA mfc,byte[] secretKeys,boolean isCheckSum) throws Exception {
 		byte[] iv = ivDefault;
 
@@ -2011,6 +2015,214 @@ public class TagUtil {
 		System.arraycopy(command9, 1, command10, 0, 8);
 		iv = command6;
 		command11 = ThreeDES.decode(command10, iv, secretKeys);
+	}
+**/
+
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
+	private void accreditation(NfcA mfc, byte[] secretKeys, boolean isCheckSum) throws Exception {
+		byte[] iv = ivDefault;
+
+		byte[] bytes0 = new byte[2];// 发送认证指令的参数
+		byte[] bytes0WithCheckSum = new byte[4];// 发送认证指令的参数(with check sum)
+
+		byte[] bytes1 = null;// 发送认证后，卡片返回的密文1
+		byte[] bytes1WithCheckSum = null;// 发送认证后，卡片返回的密文1
+
+		byte[] bytes2 = null;// 密文1去掉数组中的第1个数据,取出有效数组
+
+		byte[] bytes3 = null;// 密文1 解密后的数据
+		byte[] bytes4 = null;// bytes2 加密
+		byte[] bytes5 = null;// bytes3 循环左移得到的数据
+		byte[] bytes6 = null;// 使用bytes5 和 bytes4 第二次加密后的数据RNDB
+		byte[] bytes7 = null;//
+		byte[] bytes8 = null;//
+		byte[] bytes9 = null;//
+		byte[] bytes10 = null;//
+		byte[] bytes11 = null;//
+
+		bytes0[0] = (byte) 0x1A; // 命令位
+		bytes0[1] = (byte) 0x00; // 标志位
+		if(isCheckSum)
+		{
+			byte[] checkSum = getCheckSum(bytes0);
+			bytes0WithCheckSum[0]=bytes0[0];
+			bytes0WithCheckSum[1]=bytes0[1];
+			bytes0WithCheckSum[2]=checkSum[0];
+			bytes0WithCheckSum[3]=checkSum[1];
+			bytes1WithCheckSum = mfc.transceive(bytes0WithCheckSum);// 11 bytes
+			if(bytes1WithCheckSum.length != 11)
+			{
+				String str="";
+				for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
+				{
+					str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
+				}
+				throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
+			}
+			bytes1= new byte[9];
+			System.arraycopy(bytes1WithCheckSum, 0, bytes1, 0, 9);
+			Log.i("authen","first send end");
+			Log.i("authen","first send response" +bytesToHexString(bytes1));
+		}
+		else
+			bytes1 = mfc.transceive(bytes0);
+
+		bytes2 = new byte[8];
+		if(bytes1.length != 9)
+		{
+			String str="";
+			for (int i = 0 ; i<bytes1.length;i++)
+			{
+				str = str+" byte"+i+"="+bytes1[i]+"  ";
+			}
+			throw new Exception("length of response is not 9 bytes. the response bytes is: "+str);
+		}
+		System.arraycopy(bytes1, 1, bytes2, 0, 8);
+		bytes3 = ThreeDES.decode(bytes2, iv, secretKeys);
+		iv = bytes2;
+		bytes4 = ThreeDES.encode(random, iv, secretKeys);
+		iv = bytes4;
+		bytes5 = new byte[8];
+		System.arraycopy(bytes3, 1, bytes5, 0, 7);
+		bytes5[7] = bytes3[0];
+		bytes6 = ThreeDES.encode(bytes5, iv, secretKeys);
+
+		bytes7 = new byte[16];
+		System.arraycopy(bytes4, 0, bytes7, 0, 8);
+		System.arraycopy(bytes6, 0, bytes7, 8, 8);
+		bytes8 = new byte[17];
+
+		bytes8[0] = (byte) 0xAF;
+		System.arraycopy(bytes7, 0, bytes8, 1, 16);
+
+		if(isCheckSum)
+		{
+			byte[] bytes8WithCheckSum= new byte[19];
+			byte[] checkSum = getCheckSum(bytes8);
+			for(int i=0;i<17;i++)
+			{
+				bytes8WithCheckSum[i]=bytes8[i];
+			}
+			bytes8WithCheckSum[17]=checkSum[0];
+			bytes8WithCheckSum[18]=checkSum[1];
+			Log.i("authen","sencond send:"+bytesToHexString(bytes8WithCheckSum));
+			bytes9 = mfc.transceive(bytes8WithCheckSum);//
+			Log.i("authen","sencond send end");
+		}
+		else
+			bytes9 = mfc.transceive(bytes8);
+		bytes10 = new byte[8];
+		System.arraycopy(bytes9, 1, bytes10, 0, 8);
+		iv = bytes6;
+		bytes11 = ThreeDES.decode(bytes10, iv, secretKeys);
+	}
+
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
+	private void accreditationNtag424AES(NfcA mfc, byte[] secretKeys, boolean isCheckSum) throws Exception {
+		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
+		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
+
+		byte[] command1 = hexStringToBytes("029071000008000600000000000000");// 发送的第一个指令，获取芯片随机数
+		byte[] command1WithCheckSum = new byte[command1.length+2];// 发送的第一个指令，带2个校验字节(with check sum，部分手机需要)
+		System.arraycopy(command1, 0, command1WithCheckSum, 0, command1.length);
+
+		byte[] bytes1 = null;// 发送的第一个指令，芯片返回的完整密文1
+		byte[] bytes1WithCheckSum = null;// 发送认证后，芯片返回的完整密文1，带校验字节
+		byte[] bytes2 = null;// 完整密文1去掉数组中的第1个数据,取出 有效秘文
+
+		byte[] rndbp = null;// 密文1 解密后的数据
+		byte[] rndbpp = null;// rndbp 循环左移得到的数据
+
+		byte[] bytes6 = null;// rndbpp 和 encodedIV 第二次加密后的数据 RNDB
+		byte[] command2 = null;// 发送的第二个指令，
+
+		byte[] receive = null;//
+		byte[] rndapp = null;//
+		byte[] bytes11 = null;//
+
+		//////////Step1/////////////
+		if(isCheckSum)
+		{
+			byte[] checkSum = getCheckSum(command1);
+			command1WithCheckSum[command1WithCheckSum.length-2]=checkSum[0];
+			command1WithCheckSum[command1WithCheckSum.length-1]=checkSum[1];
+			bytes1WithCheckSum = mfc.transceive(command1WithCheckSum);// 11 bytes
+			String str="";
+//			if(bytes1WithCheckSum.length != 11)
+//			{
+//				String str="";
+//				for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
+//				{
+//					str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
+//				}
+//				throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
+//			}
+			for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
+				{
+					str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
+				}
+			Log.i("424 Authen","first command response with crc:" +str);
+			bytes1= new byte[9];
+			System.arraycopy(bytes1WithCheckSum, 0, bytes1, 0, 9);
+			Log.i("424 Authen","first command response" +bytesToHexString(bytes1));
+		}
+		else
+			bytes1 = mfc.transceive(command1);
+
+		//////////Step2/////////////
+		bytes2 = new byte[bytes1.length-1];
+		if(bytes1.length != 21)
+		{
+			Log.i("424 Authen","Length of response is not 21 bytes:" +bytesToHexString(bytes1));
+			throw new Exception("Length of response is not 21 bytes. the response bytes is: "+bytesToHexString(bytes1));
+		}
+		Log.d("424 Authen","full encoded chip random:" +bytesToHexString(bytes1));
+
+		System.arraycopy(bytes1, 1, bytes2, 0, 8);
+		Log.d("424 Authen","valid encoded chip random:" +bytesToHexString(bytes2));
+
+		rndbp = AES.decode(bytes2, iv, secretKeys);
+		Log.d("424 Authen","decoded chip random:" +bytesToHexString(rndbp));
+
+		rnda = AES.encode(rnda, iv, secretKeys);
+
+		rndbpp = new byte[rndbp.length];
+		System.arraycopy(rndbp, 1, rndbpp, 0, 7);
+		rndbpp[rndbpp.length-1] = rndbp[0];
+
+		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
+
+		String rndap_bpp = bytesToHexString(rnda)+ bytesToHexString(rndbpp);
+		String command2Str ="0290AF000020"+rndap_bpp;
+		Log.d("424 Authen","command2:" +command2Str);
+		command2 = hexStringToBytes(command2Str);
+		if(isCheckSum)
+		{
+			byte[] command2WithCheckSum= new byte[command2.length+2];
+			byte[] checkSum = getCheckSum(command2);
+			for(int i=0;i<command2.length;i++)
+			{
+				command2WithCheckSum[i]=command2[i];
+			}
+			command2WithCheckSum[command2WithCheckSum.length-2]=checkSum[0];
+			command2WithCheckSum[command2WithCheckSum.length-1]=checkSum[1];
+			Log.i("424 Authen","sencond send:"+bytesToHexString(command2WithCheckSum));
+			receive = mfc.transceive(command2WithCheckSum);//
+			Log.i("424 Authen","sencond send end");
+		}
+		else
+			receive = mfc.transceive(command2);
+		Log.i("424 Authen","full encoded receive:"+receive);
+
+		rndapp = new byte[receive.length];
+		System.arraycopy(receive, 1, rndapp, 0, 8);
+		Log.i("424 Authen","valid encoded receive:"+rndapp);
+
+		byte[] andappnew = AES.decode(rndapp, iv, secretKeys);
+		if (!bytesToHexString(andappnew).substring(32, 32).equals("00000000000000000000000000000000") ) {
+			Log.i("424 Authen","full decoded receive:"+andappnew);
+			throw new Exception("424 Authen failed, rndapp=" + rndapp);
+		}
 	}
 
 	/**
