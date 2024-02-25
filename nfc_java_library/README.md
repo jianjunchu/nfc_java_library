@@ -25,6 +25,3 @@ gradle makeJar
 
 # Clear jar
 gradle clearJar
-
-# How to use the Library, Example
-![93081617859099_ pic](https://user-images.githubusercontent.com/6426268/113978770-f04be280-9876-11eb-937a-d05e5a4b16de.jpg)
