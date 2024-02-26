@@ -2178,7 +2178,7 @@ public class TagUtil {
 		}
 		Log.d("424 Authen","full encoded chip random:" +bytesToHexString(bytes1));
 
-		System.arraycopy(bytes1, 1, bytes2, 0, 8);
+		System.arraycopy(bytes1, 1, bytes2, 0, 16);
 		Log.d("424 Authen","valid encoded chip random:" +bytesToHexString(bytes2));
 
 		rndbp = AES.decode(bytes2, iv, secretKeys);
@@ -2189,10 +2189,11 @@ public class TagUtil {
 		rndbpp = new byte[rndbp.length];
 		System.arraycopy(rndbp, 1, rndbpp, 0, 15);
 		rndbpp[rndbpp.length-1] = rndbp[0];
-
 		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
+		Log.d("424 Authen","rndbpp:" +bytesToHexString(rndbpp));
 
 		String rndap_bpp = bytesToHexString(rnda)+ bytesToHexString(rndbpp);
+
 		String command2Str ="0290AF000020"+rndap_bpp;
 		Log.d("424 Authen","command2:" +command2Str);
 		command2 = hexStringToBytes(command2Str);
