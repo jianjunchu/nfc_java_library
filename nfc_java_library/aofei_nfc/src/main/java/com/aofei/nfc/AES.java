@@ -106,7 +106,7 @@ public class AES {
         try {
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             SecretKeySpec keySpec = new SecretKeySpec(message, "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");// 创建密码器
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");// 创建密码器
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);// 初始化
             return cipher.doFinal(content); // 加密
         } catch (NoSuchAlgorithmException e) {
@@ -127,13 +127,13 @@ public class AES {
 
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    public static byte[] decode(byte[] content,byte[] iv ,byte[] message) throws NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException {
+    public static byte[] decode(byte[] content,byte[] iv ,byte[] key) throws NoSuchAlgorithmException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException {
         try {
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            SecretKeySpec keySpec = new SecretKeySpec(message, "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");// 创建密码器
+            SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");// 创建密码器
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);// 初始化
-            return cipher.doFinal(content); // 加密
+            return cipher.doFinal(content); // 解密
         } catch (NoSuchAlgorithmException  e) {
             e.printStackTrace();
             throw e;
