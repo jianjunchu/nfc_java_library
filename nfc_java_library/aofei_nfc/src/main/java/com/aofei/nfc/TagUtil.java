@@ -2118,7 +2118,7 @@ public class TagUtil {
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
-	private void accreditationNtag424AES(NfcA mfc, byte[] secretKeys, boolean isCheckSum) throws Exception {
+	private void accreditationNtag424AES(NfcA mfc, int keyIndex, byte[] secretKeys, boolean isCheckSum) throws Exception {
 		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
 		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
 
