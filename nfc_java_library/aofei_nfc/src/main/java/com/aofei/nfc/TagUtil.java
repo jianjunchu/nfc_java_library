@@ -25,6 +25,7 @@ import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.NfcA;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -1919,104 +1920,104 @@ public class TagUtil {
 	}
 
 	/**
-	private void accreditation(NfcA mfc,byte[] secretKeys,boolean isCheckSum) throws Exception {
-		byte[] iv = ivDefault;
+	 private void accreditation(NfcA mfc,byte[] secretKeys,boolean isCheckSum) throws Exception {
+	 byte[] iv = ivDefault;
 
-		byte[] command0 = new byte[2];// 发送认证指令的参数
-		byte[] command0WithCheckSum = new byte[4];// 发送认证指令的参数(with check sum)
+	 byte[] command0 = new byte[2];// 发送认证指令的参数
+	 byte[] command0WithCheckSum = new byte[4];// 发送认证指令的参数(with check sum)
 
-		byte[] command1 = null;// 发送认证后，卡片返回的密文1
-		byte[] command1WithCheckSum = null;// 发送认证后，卡片返回的密文1
+	 byte[] command1 = null;// 发送认证后，卡片返回的密文1
+	 byte[] command1WithCheckSum = null;// 发送认证后，卡片返回的密文1
 
-		byte[] command2 = null;// 密文1去掉数组中的第1个数据,取出有效数组
+	 byte[] command2 = null;// 密文1去掉数组中的第1个数据,取出有效数组
 
-		byte[] command3 = null;// 密文1 解密后的数据
-		byte[] command4 = null;// command2 加密
-		byte[] command5 = null;// command3 循环左移得到的数据
-		byte[] command6 = null;// 使用command5 和 command4 第二次加密后的数据RNDB
-		byte[] command7 = null;//
-		byte[] command8 = null;//
-		byte[] command9 = null;//
-		byte[] command10 = null;//
-		byte[] command11 = null;//
+	 byte[] command3 = null;// 密文1 解密后的数据
+	 byte[] command4 = null;// command2 加密
+	 byte[] command5 = null;// command3 循环左移得到的数据
+	 byte[] command6 = null;// 使用command5 和 command4 第二次加密后的数据RNDB
+	 byte[] command7 = null;//
+	 byte[] command8 = null;//
+	 byte[] command9 = null;//
+	 byte[] command10 = null;//
+	 byte[] command11 = null;//
 
-		command0[0] = (byte) 0x1A; // 命令位
-		command0[1] = (byte) 0x00; // 标志位
-		if(isCheckSum)
-		{
-			byte[] checkSum = getCheckSum(command0);
-			command0WithCheckSum[0]=command0[0];
-			command0WithCheckSum[1]=command0[1];
-			command0WithCheckSum[2]=checkSum[0];
-			command0WithCheckSum[3]=checkSum[1];
-			command1WithCheckSum = mfc.transceive(command0WithCheckSum);// 11 bytes
-			if(command1WithCheckSum.length != 11)
-			{
-				String str="";
-				for (int i = 0 ; i<command1WithCheckSum.length;i++)
-				{
-					str = str+" byte"+i+"="+command1WithCheckSum[i]+"  ";
-				}
-				throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
-			}
-			command1= new byte[9];
-			System.arraycopy(command1WithCheckSum, 0, command1, 0, 9);
-			Log.i("authen","first send end");
-			Log.i("authen","first send response" +bytesToHexString(command1));
-		}
-		else
-			command1 = mfc.transceive(command0);
+	 command0[0] = (byte) 0x1A; // 命令位
+	 command0[1] = (byte) 0x00; // 标志位
+	 if(isCheckSum)
+	 {
+	 byte[] checkSum = getCheckSum(command0);
+	 command0WithCheckSum[0]=command0[0];
+	 command0WithCheckSum[1]=command0[1];
+	 command0WithCheckSum[2]=checkSum[0];
+	 command0WithCheckSum[3]=checkSum[1];
+	 command1WithCheckSum = mfc.transceive(command0WithCheckSum);// 11 bytes
+	 if(command1WithCheckSum.length != 11)
+	 {
+	 String str="";
+	 for (int i = 0 ; i<command1WithCheckSum.length;i++)
+	 {
+	 str = str+" byte"+i+"="+command1WithCheckSum[i]+"  ";
+	 }
+	 throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
+	 }
+	 command1= new byte[9];
+	 System.arraycopy(command1WithCheckSum, 0, command1, 0, 9);
+	 Log.i("authen","first send end");
+	 Log.i("authen","first send response" +bytesToHexString(command1));
+	 }
+	 else
+	 command1 = mfc.transceive(command0);
 
-		command2 = new byte[8];
-		if(command1.length != 9)
-		{
-			String str="";
-			for (int i = 0 ; i<command1.length;i++)
-			{
-				str = str+" byte"+i+"="+command1[i]+"  ";
-			}
-			throw new Exception("length of response is not 9 bytes. the response bytes is: "+str);
-		}
-		System.arraycopy(command1, 1, command2, 0, 8);
-		command3 = ThreeDES.decode(command2, iv, secretKeys);
-		iv = command2;
-		command4 = ThreeDES.encode(random, iv, secretKeys);
-		iv = command4;
-		command5 = new byte[8];
-		System.arraycopy(command3, 1, command5, 0, 7);
-		command5[7] = command3[0];
-		command6 = ThreeDES.encode(command5, iv, secretKeys);
+	 command2 = new byte[8];
+	 if(command1.length != 9)
+	 {
+	 String str="";
+	 for (int i = 0 ; i<command1.length;i++)
+	 {
+	 str = str+" byte"+i+"="+command1[i]+"  ";
+	 }
+	 throw new Exception("length of response is not 9 bytes. the response bytes is: "+str);
+	 }
+	 System.arraycopy(command1, 1, command2, 0, 8);
+	 command3 = ThreeDES.decode(command2, iv, secretKeys);
+	 iv = command2;
+	 command4 = ThreeDES.encode(random, iv, secretKeys);
+	 iv = command4;
+	 command5 = new byte[8];
+	 System.arraycopy(command3, 1, command5, 0, 7);
+	 command5[7] = command3[0];
+	 command6 = ThreeDES.encode(command5, iv, secretKeys);
 
-		command7 = new byte[16];
-		System.arraycopy(command4, 0, command7, 0, 8);
-		System.arraycopy(command6, 0, command7, 8, 8);
-		command8 = new byte[17];
+	 command7 = new byte[16];
+	 System.arraycopy(command4, 0, command7, 0, 8);
+	 System.arraycopy(command6, 0, command7, 8, 8);
+	 command8 = new byte[17];
 
-		command8[0] = (byte) 0xAF;
-		System.arraycopy(command7, 0, command8, 1, 16);
+	 command8[0] = (byte) 0xAF;
+	 System.arraycopy(command7, 0, command8, 1, 16);
 
-		if(isCheckSum)
-		{
-			byte[] command8WithCheckSum= new byte[19];
-			byte[] checkSum = getCheckSum(command8);
-			for(int i=0;i<17;i++)
-			{
-				command8WithCheckSum[i]=command8[i];
-			}
-			command8WithCheckSum[17]=checkSum[0];
-			command8WithCheckSum[18]=checkSum[1];
-			Log.i("authen","sencond send:"+bytesToHexString(command8WithCheckSum));
-			command9 = mfc.transceive(command8WithCheckSum);//
-			Log.i("authen","sencond send end");
-		}
-		else
-			command9 = mfc.transceive(command8);
-		command10 = new byte[8];
-		System.arraycopy(command9, 1, command10, 0, 8);
-		iv = command6;
-		command11 = ThreeDES.decode(command10, iv, secretKeys);
-	}
-**/
+	 if(isCheckSum)
+	 {
+	 byte[] command8WithCheckSum= new byte[19];
+	 byte[] checkSum = getCheckSum(command8);
+	 for(int i=0;i<17;i++)
+	 {
+	 command8WithCheckSum[i]=command8[i];
+	 }
+	 command8WithCheckSum[17]=checkSum[0];
+	 command8WithCheckSum[18]=checkSum[1];
+	 Log.i("authen","sencond send:"+bytesToHexString(command8WithCheckSum));
+	 command9 = mfc.transceive(command8WithCheckSum);//
+	 Log.i("authen","sencond send end");
+	 }
+	 else
+	 command9 = mfc.transceive(command8);
+	 command10 = new byte[8];
+	 System.arraycopy(command9, 1, command10, 0, 8);
+	 iv = command6;
+	 command11 = ThreeDES.decode(command10, iv, secretKeys);
+	 }
+	 **/
 
 
 
@@ -2125,6 +2126,24 @@ public class TagUtil {
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
 	private void accreditationNtag424AES(NfcA mfc, int keyIndex, byte[] secretKeys, boolean isCheckSum) throws Exception {
+
+		//RATS命令，交换双方支持的功能
+		byte[] ratsCmd = hexStringToBytes("E080");
+		byte[] rats_res =  mfc.transceive(ratsCmd);
+		Log.i("rats_res:{}",bytesToHexString(rats_res));
+		String rats_res_hex =bytesToHexString(rats_res);
+		if(!TextUtils.isEmpty(rats_res_hex) && rats_res_hex.toUpperCase().startsWith("067777710280".toUpperCase())){
+			byte[] selectDfFileCmd = hexStringToBytes("0200a4040007d2760000850101");
+			byte[] selectDfFileRes =  mfc.transceive(selectDfFileCmd);
+
+		}else{
+			throw new Exception("Validation failure");
+		}
+
+
+
+
+
 		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
 		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
 
@@ -2164,9 +2183,9 @@ public class TagUtil {
 //				throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
 //			}
 			for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
-				{
-					str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
-				}
+			{
+				str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
+			}
 			Log.i("424 Authen","first command response with crc:" +str);
 			bytes1= new byte[9];
 			System.arraycopy(bytes1WithCheckSum, 0, bytes1, 0, 9);
@@ -2174,6 +2193,8 @@ public class TagUtil {
 		}
 		else
 			bytes1 = mfc.transceive(command1);
+
+
 
 		//////////Step2/////////////
 		bytes2 = new byte[16];
@@ -2349,29 +2370,40 @@ public class TagUtil {
 //		uid=bytesToHexString(datau);
 
 		nfcA = NfcA.get(tag);
+
 		try {
 			String metaInfo = "";
 			nfcA.connect();
-			byte[] datas = new byte[2];
-			byte[] datasWithCheckSum = new byte[4];
-			datas[0] = 0x30;
-			datas[1] = 0x00;
-			byte[] datar;
-			if(isCheckSum)
-			{
-				byte[] checkSum = getCheckSum(datas);
-				datasWithCheckSum[0]=datas[0];
-				datasWithCheckSum[1]=datas[1];
-				datasWithCheckSum[2]=checkSum[0];
-				datasWithCheckSum[3]=checkSum[1];
-				datar = nfcA.transceive(datasWithCheckSum);// 每次读出来的数据为4page的数据
+
+			String atqa = bytesToHexString(nfcA.getAtqa()) ;
+			Log.i("atqa：{}",atqa);
+			if(!"4403".equalsIgnoreCase(atqa)){
+				byte[] datas = new byte[2];
+				byte[] datasWithCheckSum = new byte[4];
+				datas[0] = 0x30;
+				datas[1] = 0x00;
+				byte[] datar;
+				if(isCheckSum)
+				{
+					byte[] checkSum = getCheckSum(datas);
+					datasWithCheckSum[0]=datas[0];
+					datasWithCheckSum[1]=datas[1];
+					datasWithCheckSum[2]=checkSum[0];
+					datasWithCheckSum[3]=checkSum[1];
+					datar = nfcA.transceive(datasWithCheckSum);// 每次读出来的数据为4page的数据
+				} else{
+					Log.i("发送：{}",bytesToHexString(datas));
+					datar = nfcA.transceive(datas);// 每次读出来的数据为4page的数据
+					Log.i("返回：{}",bytesToHexString(datar));
+				}
+
+				byte[] datau = new byte[7];//uid号
+				System.arraycopy(datar, 0, datau, 0, 3);// 去4page中的第1page数据
+				System.arraycopy(datar, 4, datau, 3, 4);// 去4page中的第1page数据
+				uid=bytesToHexString(datau);
 			}
-			else
-				datar = nfcA.transceive(datas);// 每次读出来的数据为4page的数据
-			byte[] datau = new byte[7];//uid号
-			System.arraycopy(datar, 0, datau, 0, 3);// 去4page中的第1page数据
-			System.arraycopy(datar, 4, datau, 3, 4);// 去4page中的第1page数据
-			uid=bytesToHexString(datau);
+
+
 		}
 		catch(Exception e)
 		{
@@ -2518,7 +2550,7 @@ public class TagUtil {
 	{
 		//System.out.println(  (byte)0xf1 > 4);
 		try {
-			TagUtil.test1();
+			//TagUtil.test1();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
