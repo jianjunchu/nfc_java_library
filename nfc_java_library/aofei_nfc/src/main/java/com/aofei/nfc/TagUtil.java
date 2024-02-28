@@ -2186,8 +2186,8 @@ public class TagUtil {
 
 		rnda = AES.encode(rnda, iv, secretKeys);
 
-		rndbpp = new byte[rndbp.length];
-		System.arraycopy(rndbp, 1, rndbpp, 0, 15);
+		rndbpp = new byte[15];
+		System.arraycopy(rndbp, 1, rndbpp, 0, 14);
 		rndbpp[rndbpp.length-1] = rndbp[0];
 		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
 		Log.d("424 Authen","rndbpp:" +bytesToHexString(rndbpp));
