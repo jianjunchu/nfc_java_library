@@ -2198,10 +2198,10 @@ public class TagUtil {
 
 		//////////Step2/////////////
 		bytes2 = new byte[16];
-		if(bytes1.length != 21)
+		if(bytes1.length != 20)
 		{
-			Log.i("424 Authen","Length of response is not 21 bytes:" +bytesToHexString(bytes1));
-			throw new Exception("Length of response is not 21 bytes. the response bytes is: "+bytesToHexString(bytes1));
+			Log.i("424 Authen","Length of response is not 20 bytes:" +bytesToHexString(bytes1));
+			throw new Exception("Length of response is not 20 bytes. the response bytes is: "+bytesToHexString(bytes1));
 		}
 		Log.d("424 Authen","full encoded chip random:" +bytesToHexString(bytes1));
 
