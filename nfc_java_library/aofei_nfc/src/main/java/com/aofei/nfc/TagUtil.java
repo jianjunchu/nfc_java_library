@@ -128,10 +128,7 @@ public class TagUtil {
 							throw ex;
 					}
 				}
-				else
-				{
-					throw new Exception("unsupported action "+action +" only support ACTION_TECH_DISCOVERED or ACTION_TAG_DISCOVERED or ACTION_NDEF_DISCOVERED");
-				}
+
 			}
 			tagFromIntent = null;
 			TagUtil tagUtil = new TagUtil(uid,type);
@@ -144,7 +141,10 @@ public class TagUtil {
 //		else
 //			throw new Exception ("illegal tag");
 		}
-		return null;
+		else
+		{
+			throw new Exception("unsupported action "+action +" only support ACTION_TECH_DISCOVERED or ACTION_TAG_DISCOVERED or ACTION_NDEF_DISCOVERED");
+		}
 	}
 
 
@@ -2018,6 +2018,8 @@ public class TagUtil {
 	}
 **/
 
+
+
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
 	private void accreditation(NfcA mfc, byte[] secretKeys, boolean isCheckSum) throws Exception {
 		byte[] iv = ivDefault;
@@ -2115,6 +2117,10 @@ public class TagUtil {
 		System.arraycopy(bytes9, 1, bytes10, 0, 8);
 		iv = bytes6;
 		bytes11 = ThreeDES.decode(bytes10, iv, secretKeys);
+	}
+
+	public void accreditationNtag424AES(int keyIndex, byte[] secretKeys, boolean isCheckSum) throws Exception{
+		accreditationNtag424AES(nfcA,keyIndex,secretKeys,isCheckSum);
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
