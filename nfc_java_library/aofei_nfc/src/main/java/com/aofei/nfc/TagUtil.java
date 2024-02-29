@@ -2259,7 +2259,11 @@ public class TagUtil {
 		Log.i("424 Authen","valid encoded receive:"+rndapp);
 
 		byte[] andappnew = AES.decode(rndapp, iv, secretKeys);
-		if (!bytesToHexString(andappnew).substring(32, 32).equals("00000000000000000000000000000000") ) {
+		Log.i("424 Authen","valid decoded receive:"+bytesToHexString(andappnew));
+		byte[] andappnewLast16 = new byte[16];// 解密后的后16个字节
+		System.arraycopy(andappnew, andappnew.length-16,  andappnewLast16, 0, 16);
+
+		if (!bytesToHexString(andappnewLast16).equals("00000000000000000000000000000000") ) {
 			Log.i("424 Authen","full decoded receive:"+andappnew);
 			throw new Exception("424 Authen failed, rndapp=" + rndapp);
 		}
