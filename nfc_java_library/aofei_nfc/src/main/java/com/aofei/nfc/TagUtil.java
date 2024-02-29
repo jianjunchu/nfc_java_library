@@ -2234,12 +2234,12 @@ public class TagUtil {
 		}
 		else
 			receive = mfc.transceive(command2);
-		Log.i("424 Authen","full encoded receive:"+receive);
+		Log.i("424 Authen","full encoded receive:"+bytesToHexString(receive));
 
-		rndapp = new byte[receive.length];
+		rndapp = new byte[16];
 
 		try {
-			System.arraycopy(receive, 1, rndapp, 0, 8);
+			System.arraycopy(receive, 1, rndapp, 0, 16);
 		}catch (Exception e){
 			if(receive.length > 3){
 				if(receive[2] == 0x7e){
@@ -2255,8 +2255,6 @@ public class TagUtil {
 				throw e;
 			}
 		}
-
-
 
 		Log.i("424 Authen","valid encoded receive:"+rndapp);
 
