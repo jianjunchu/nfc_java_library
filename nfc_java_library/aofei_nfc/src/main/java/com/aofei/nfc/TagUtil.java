@@ -2242,11 +2242,11 @@ public class TagUtil {
 			System.arraycopy(receive, 1, rndapp, 0, 32);
 		}catch (Exception e){
 			if(receive.length > 3){
-				if(receive[2] == 0x7e){
+				if((receive[2] & 0x7E) == 0x7E){
 					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Command size not allowed.");
-				}else if(receive[2] == 0xae){
+				}else if((receive[2] & 0xAE) == 0xAE){
 					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Wrong RndB’");
-				}else if(receive[2] == 0xee){
+				}else if((receive[2] & 0xEE) == 0xEE){
 					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Failure when reading or writing to non-volatile memory.");
 				}else{
 					throw e;
