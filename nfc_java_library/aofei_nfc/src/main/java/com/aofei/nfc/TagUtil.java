@@ -11,6 +11,7 @@ import com.aofei.mifare.Converter;
 import com.aofei.mifare.MifareBlock;
 import com.aofei.mifare.MifareClassCard;
 import com.aofei.mifare.MifareSector;
+import com.aofei.util.AuthNTAG424FailException;
 
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
@@ -2120,12 +2121,12 @@ public class TagUtil {
 		bytes11 = ThreeDES.decode(bytes10, iv, secretKeys);
 	}
 
-	public void accreditationNtag424AES(int keyIndex, byte[] secretKeys, boolean isCheckSum) throws Exception{
+	public void accreditationNtag424AES(int keyIndex, byte[] secretKeys, boolean isCheckSum) throws AuthNTAG424FailException, Exception{
 		accreditationNtag424AES(nfcA,keyIndex,secretKeys,isCheckSum);
 	}
 
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
-	private void accreditationNtag424AES(NfcA mfc, int keyIndex, byte[] secretKeys, boolean isCheckSum) throws Exception {
+	private void accreditationNtag424AES(NfcA mfc, int keyIndex, byte[] secretKeys, boolean isCheckSum) throws AuthNTAG424FailException, Exception {
 
 		//RATS命令，交换双方支持的功能
 		byte[] ratsCmd = hexStringToBytes("E080");
@@ -2236,7 +2237,27 @@ public class TagUtil {
 		Log.i("424 Authen","full encoded receive:"+receive);
 
 		rndapp = new byte[receive.length];
-		System.arraycopy(receive, 1, rndapp, 0, 8);
+
+		try {
+			System.arraycopy(receive, 1, rndapp, 0, 8);
+		}catch (Exception e){
+			if(receive.length > 3){
+				if(receive[2] == 0x7e){
+					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Command size not allowed.");
+				}else if(receive[2] == 0xae){
+					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Wrong RndB’");
+				}else if(receive[2] == 0xee){
+					throw new AuthNTAG424FailException(bytesToHexString(rndapp),"Failure when reading or writing to non-volatile memory.");
+				}else{
+					throw e;
+				}
+			}else{
+				throw e;
+			}
+		}
+
+
+
 		Log.i("424 Authen","valid encoded receive:"+rndapp);
 
 		byte[] andappnew = AES.decode(rndapp, iv, secretKeys);
