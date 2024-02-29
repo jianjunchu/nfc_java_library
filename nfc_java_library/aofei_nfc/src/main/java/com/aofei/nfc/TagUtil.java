@@ -2236,10 +2236,10 @@ public class TagUtil {
 			receive = mfc.transceive(command2);
 		Log.i("424 Authen","full encoded receive:"+bytesToHexString(receive));
 
-		rndapp = new byte[16];
+		rndapp = new byte[32];
 
 		try {
-			System.arraycopy(receive, 1, rndapp, 0, 16);
+			System.arraycopy(receive, 1, rndapp, 0, 32);
 		}catch (Exception e){
 			if(receive.length > 3){
 				if(receive[2] == 0x7e){
@@ -2255,8 +2255,8 @@ public class TagUtil {
 				throw e;
 			}
 		}
-
 		Log.i("424 Authen","valid encoded receive:"+rndapp);
+
 
 		byte[] andappnew = AES.decode(rndapp, iv, secretKeys);
 		Log.i("424 Authen","valid decoded receive:"+bytesToHexString(andappnew));
