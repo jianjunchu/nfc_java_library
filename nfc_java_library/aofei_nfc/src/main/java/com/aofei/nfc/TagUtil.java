@@ -2215,7 +2215,7 @@ public class TagUtil {
 
 		String rndap_bpp = bytesToHexString(rnda)+ bytesToHexString(rndbpp);
 
-		String command2Str ="0290AF000020"+rndap_bpp;
+		String command2Str ="0290AF000020"+rndap_bpp+"00";
 		Log.d("424 Authen","command2:" +command2Str);
 		command2 = hexStringToBytes(command2Str);
 		if(isCheckSum)
