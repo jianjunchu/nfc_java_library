@@ -2173,20 +2173,7 @@ public class TagUtil {
 			command1WithCheckSum[command1WithCheckSum.length-1]=checkSum[1];
 			bytes1WithCheckSum = mfc.transceive(command1WithCheckSum);// 11 bytes
 			String str="";
-//			if(bytes1WithCheckSum.length != 11)
-//			{
-//				String str="";
-//				for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
-//				{
-//					str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
-//				}
-//				throw new Exception("length of response is not 11 bytes. the response bytes is: "+str);
-//			}
-			for (int i = 0 ; i<bytes1WithCheckSum.length;i++)
-			{
-				str = str+" byte"+i+"="+bytes1WithCheckSum[i]+"  ";
-			}
-			Log.i("424 Authen","first command response with crc:" +str);
+			Log.i("424 Authen","first command response with crc:" +bytesToHexString(bytes1WithCheckSum));
 			bytes1= new byte[9];
 			System.arraycopy(bytes1WithCheckSum, 0, bytes1, 0, 9);
 			Log.i("424 Authen","first command response" +bytesToHexString(bytes1));
@@ -2260,7 +2247,6 @@ public class TagUtil {
 			}
 		}
 		Log.i("424 Authen","valid encoded receive:"+rndapp);
-
 
 		byte[] andappnew = AES.decode(rndapp, iv, secretKeys);
 		Log.i("424 Authen","valid decoded receive:"+bytesToHexString(andappnew));
