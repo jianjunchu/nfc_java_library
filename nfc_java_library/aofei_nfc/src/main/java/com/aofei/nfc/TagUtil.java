@@ -2139,11 +2139,6 @@ public class TagUtil {
 		}else{
 			throw new Exception("Validation failure");
 		}
-
-
-
-
-
 		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
 		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
 
@@ -2194,8 +2189,6 @@ public class TagUtil {
 		else
 			bytes1 = mfc.transceive(command1);
 
-
-
 		//////////Step2/////////////
 		bytes2 = new byte[16];
 		if(bytes1.length != 20)
@@ -2214,9 +2207,8 @@ public class TagUtil {
 		rnda = AES.encode(rnda, iv, secretKeys);
 
 		rndbpp = new byte[16];
-		System.arraycopy(rndbp, 1, rndbpp, 0, 14);
-		rndbpp[rndbpp.length-2] = rndbp[0];
-		rndbpp[rndbpp.length-1] = 0;
+		System.arraycopy(rndbp, 1, rndbpp, 0, 15);
+		rndbpp[rndbpp.length-1] = rndbp[0];
 		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
 		Log.d("424 Authen","rndbpp:" +bytesToHexString(rndbpp));
 
@@ -2549,12 +2541,12 @@ public class TagUtil {
 	 */
 	public static void main(String[] args)
 	{
-		//System.out.println(  (byte)0xf1 > 4);
-		try {
-			//TagUtil.test1();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		System.out.println(  (byte)0xf1 > 4);
+//		try {
+//			TagUtil.test1();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
 //	 private void testGetAuthWithAuthentication(TagUtil tagUtil,Intent intent)
@@ -3013,62 +3005,62 @@ public class TagUtil {
 
 
 	}
-//
-//	public static boolean test1() throws Exception {
-//		byte[] secretKeys = hexStringToBytes("00000000000000000000000000000000");// 初始 Key
-//		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
-//		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
-//
-//		byte[] command1 = hexStringToBytes("029071000008000600000000000000");// 发送的第一个指令，获取芯片随机数
-//		byte[] command1WithCheckSum = new byte[command1.length+2];// 发送的第一个指令，带2个校验字节(with check sum，部分手机需要)
-//		System.arraycopy(command1, 0, command1WithCheckSum, 0, command1.length);
-//
-//		byte[] bytes1 = null;// 发送的第一个指令，芯片返回的完整密文1
-//		byte[] bytes1WithCheckSum = null;// 发送认证后，芯片返回的完整密文1，带校验字节
-//		byte[] bytes2 = null;// 完整密文1去掉数组中的第1个数据,取出 有效秘文
-//
-//		byte[] rndbp = null;// 密文1 解密后的数据
-//		byte[] rndbpp = null;// rndbp 循环左移得到的数据
-//
-//		byte[] bytes6 = null;// rndbpp 和 encodedIV 第二次加密后的数据 RNDB
-//		byte[] command2 = null;// 发送的第二个指令，
-//
-//		byte[] receive = null;//
-//		byte[] rndapp = null;//
-//		byte[] bytes11 = null;//
-//		//////////Step2/////////////
-//		bytes1= hexStringToBytes("0281123909B33E01476B96E355D480316291AF");
-//		bytes2 = new byte[16];
-////		if(bytes1.length != 21)
-////		{
-////			Log.i("424 Authen","Length of response is not 21 bytes:" +bytesToHexString(bytes1));
-////			throw new Exception("Length of response is not 21 bytes. the response bytes is: "+bytesToHexString(bytes1));
-////		}
-//		//Log.d("424 Authen","full encoded chip random:" +bytesToHexString(bytes1));
-//
-//		System.arraycopy(bytes1, 1, bytes2, 0, 16);
-//		//Log.d("424 Authen","valid encoded chip random:" +bytesToHexString(bytes2));
-//		System.out.println(bytesToHexString(bytes2));
-//		rndbp = AES.decode(bytes2, iv, secretKeys);
-//		System.out.println(bytesToHexString(rndbp));
-//
-//		//Log.d("424 Authen","decoded chip random:" +bytesToHexString(rndbp));
-//
-//		rnda = AES.encode(rnda, iv, secretKeys);
-//		System.out.println(bytesToHexString(rnda));
-//
-//		rndbpp = new byte[rndbp.length];
-//		System.arraycopy(rndbp, 1, rndbpp, 0, 15);
-//		rndbpp[rndbpp.length-1] = rndbp[0];
-//		System.out.println(bytesToHexString(rndbpp));
-//
-//		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
-//		System.out.println(bytesToHexString(rndbpp));
-//
-//		String rndap_bpp = bytesToHexString(rnda)+ bytesToHexString(rndbpp);
-//		System.out.println(rndap_bpp);
-//
-//		return false;
-//	}
+
+	public static boolean test1() throws Exception {
+		byte[] secretKeys = hexStringToBytes("00000000000000000000000000000000");// 初始 Key
+		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
+		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
+
+		byte[] command1 = hexStringToBytes("029071000008000600000000000000");// 发送的第一个指令，获取芯片随机数
+		byte[] command1WithCheckSum = new byte[command1.length+2];// 发送的第一个指令，带2个校验字节(with check sum，部分手机需要)
+		System.arraycopy(command1, 0, command1WithCheckSum, 0, command1.length);
+
+		byte[] bytes1 = null;// 发送的第一个指令，芯片返回的完整密文1
+		byte[] bytes1WithCheckSum = null;// 发送认证后，芯片返回的完整密文1，带校验字节
+		byte[] bytes2 = null;// 完整密文1去掉数组中的第1个数据,取出 有效秘文
+
+		byte[] rndbp = null;// 密文1 解密后的数据
+		byte[] rndbpp = null;// rndbp 循环左移得到的数据
+
+		byte[] bytes6 = null;// rndbpp 和 encodedIV 第二次加密后的数据 RNDB
+		byte[] command2 = null;// 发送的第二个指令，
+
+		byte[] receive = null;//
+		byte[] rndapp = null;//
+		byte[] bytes11 = null;//
+		//////////Step2/////////////
+		bytes1= hexStringToBytes("0281123909B33E01476B96E355D480316291AF");
+		bytes2 = new byte[16];
+
+		System.arraycopy(bytes1, 1, bytes2, 0, 16);
+		//Log.d("424 Authen","valid encoded chip random:" +bytesToHexString(bytes2));
+		System.out.println(bytesToHexString(bytes2));
+		rndbp = AES.decode(bytes2, iv, secretKeys);
+
+		System.out.println("Result1: "+bytesToHexString(rndbp));
+		System.out.println("Correct: 817A7C74CAFB3259D8849B2EE402CFDA");
+		//Log.d("424 Authen","decoded chip random:" +bytesToHexString(rndbp));
+
+		rnda = AES.encode(rnda, iv, secretKeys);
+		System.out.println("Result2: "+bytesToHexString(rnda));
+		System.out.println("Correct: 66E94BD4EF8A2C3B884CFA59CA342B2E");
+
+
+		rndbpp = new byte[16];
+		System.arraycopy(rndbp, 1, rndbpp, 0, 15);
+		rndbpp[rndbpp.length-1] = rndbp[0];
+
+		System.out.println("Result3: "+bytesToHexString(rndbpp));
+		System.out.println("Correct: 7A7C74CAFB3259D8849B2EE402CFDA81");
+
+		rndbpp = AES.encode(rndbpp, rnda, secretKeys);
+		System.out.println("Result4: "+bytesToHexString(rndbpp));
+		System.out.println("Correct: EF6649EF347D8FAC242C908C2425F18E");
+
+		String rndap_bpp = bytesToHexString(rnda)+ bytesToHexString(rndbpp);
+		System.out.println(rndap_bpp);
+
+		return false;
+	}
 
 }
