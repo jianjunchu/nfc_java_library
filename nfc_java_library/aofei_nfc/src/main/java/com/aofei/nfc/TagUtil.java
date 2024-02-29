@@ -2143,7 +2143,9 @@ public class TagUtil {
 		byte[] iv = hexStringToBytes("00000000000000000000000000000000");  // 初始 IV
 		byte[] rnda = hexStringToBytes("00000000000000000000000000000000");// 初始 Reader 随机数
 
-		byte[] command1 = hexStringToBytes("029071000008000600000000000000");// 发送的第一个指令，获取芯片随机数
+		String keyIndexStr="0"+new Integer(keyIndex).toString();
+
+		byte[] command1 = hexStringToBytes("029071000008"+keyIndexStr+"0600000000000000");// 发送的第一个指令，获取芯片随机数,keyIndexStr是密钥在芯片的位置
 		byte[] command1WithCheckSum = new byte[command1.length+2];// 发送的第一个指令，带2个校验字节(with check sum，部分手机需要)
 		System.arraycopy(command1, 0, command1WithCheckSum, 0, command1.length);
 
@@ -2162,6 +2164,8 @@ public class TagUtil {
 		byte[] bytes11 = null;//
 
 		//////////Step1/////////////
+		Log.d("424 Authen","command1:" +bytesToHexString(command1));
+
 		if(isCheckSum)
 		{
 			byte[] checkSum = getCheckSum(command1);
